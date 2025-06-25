@@ -21,7 +21,7 @@ jobs:
           ruby-version: '3.2'
 
       - name: Run IndexNow submission
-        run: ruby workflows/run.rb
+        run: ruby .github/workflows/run.rb
 
       - name: Save submitted list
         run: |
