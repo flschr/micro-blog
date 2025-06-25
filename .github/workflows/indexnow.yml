@@ -2,8 +2,11 @@ name: Submit to IndexNow
 
 on:
   schedule:
-    - cron: '0 * * * *'  # hourly
-  workflow_dispatch:     # allow manual trigger
+    - cron: '0 * * * *'   # Runs hourly
+  workflow_dispatch:       # Allows manual triggering
+
+permissions:
+  contents: write          # Needed to push submitted.txt updates
 
 jobs:
   indexnow:
