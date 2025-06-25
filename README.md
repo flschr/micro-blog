@@ -1,6 +1,6 @@
 # 📦 Micro.blog Backup – [fischr.org](https://fischr.org)
 
-This repository contains an **automated weekly backup** of the content published on my [micro.blog](https://fischr.org).
+This repository contains an **automated weekly backup** of my [micro.blog](https://fischr.org) content and also handles **automatic IndexNow submissions** to improve SEO visibility via a automatic Github workflow action.
 
 🗂️ **What’s included:**  
 - Posts  
