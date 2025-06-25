@@ -7,7 +7,7 @@ FEED_URL = "https://fischr.org/feed.xml"
 API_KEY = "8935437156408e3dc185dbe8c617ba90"
 KEY_LOCATION = "https://fischr.org/8935437156408e3dc185dbe8c617ba90.txt"
 HOST = "fischr.org"
-SUBMITTED_FILE = "submitted.txt"
+SUBMITTED_FILE = ".indexnow-submitted.txt"
 
 def submitted_urls
   File.exist?(SUBMITTED_FILE) ? File.read(SUBMITTED_FILE).split("\n") : []

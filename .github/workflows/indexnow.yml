@@ -1,12 +1,9 @@
-name: Submit to IndexNow
+name: indexnow
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'   # Runs hourly
-  workflow_dispatch:       # Allows manual triggering
-
-permissions:
-  contents: write          # Needed to push submitted.txt updates
+    - cron: '0 */12 * * *' # alle 12 Stunden ausführen
 
 jobs:
   indexnow:
@@ -14,20 +11,23 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.1'
+          ruby-version: '3.2'
 
       - name: Run IndexNow submission
-        run: ruby run.rb
+        run: ruby indexnow/run.rb
 
       - name: Save submitted list
         run: |
           git config --global user.name "IndexNow Bot"
-          git config --global user.email "indexnow@fischr.org"
-          git add submitted.txt
-          git commit -m "Update submitted list" || echo "No changes"
+          git config --global user.email "indexnow@example.com"
+          git add .indexnow-submitted.txt
+          git commit -m "Update submitted list" || echo "No changes to commit"
+          git pull --rebase
           git push
