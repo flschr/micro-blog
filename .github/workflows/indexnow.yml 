@@ -2,8 +2,8 @@ name: Submit to IndexNow
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Every hour
-  workflow_dispatch:     # Allow manual trigger
+    - cron: '0 * * * *'  # hourly
+  workflow_dispatch:     # allow manual trigger
 
 jobs:
   indexnow:
