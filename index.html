@@ -30,24 +30,854 @@
 		<a href="https://fischr.org/2025/10/21/openstreetmap-embeds-for-microblog-are/" class="u-url"><time class="dt-published" datetime="2025-10-21 00:33:58 &#43;0200">Oct 21, 2025</time></a>
 
 		<div class="e-content">
-			 <p><img src="https://fischr.org/uploads/2025/release-osm-embeds-40.webp" alt="Jetzt mit hellem und dunklem Modus zeigt eine Veröffentlichung von OpenStreetMap-Einbettungen für Micro.blog auf einem türkisfarbenen Hintergrund."></p>
-<img src="uploads/2025/plugin-release-osm-embeds.png" width="600" height="483" alt="">
+			 <p><img src="https://fischr.org/uploads/2025/plugin-release-osm-embeds.png" alt="Jetzt mit hellem und dunklem Modus zeigt eine Veröffentlichung von OpenStreetMap-Einbettungen für Micro.blog auf einem türkisfarbenen Hintergrund."></p>
 <p>A while ago, I created a Micro.blog Plugin to replace the native Google Maps iframes I had been using in some of my old posts. Don&rsquo;t get me wrong, these native embeds worked well enough, but they bloated the code, created a dozen connections to Google servers, and noticeably slowed down the page.</p>
-<p>The <a href="https://fischr.org/2025/06/09/little-helpers-for-your-microblog/">initial version of the plugin</a> did its job for the few cases I needed, but whenever I wanted to quickly add a new map to a post, it became a pain. Finding the right latitude and longitude, or describing a place in just the right way, often failed miserably. Too often, the result of the rendered map in my blog post was a lonely pin floating somewhere in the middle of the ocean, with nothing but blue around it.</p>
-<p>At some point, I was so frustrated that I removed all the embedded maps and even considered deleting the repository entirely. <del>Unfortunately</del> Luckily I was busy with other things and forgot about the pain the plugin caused. But while <a href="https://fischr.org/2025/10/20/adding-playlist-support-to-youtube/">working on the YouTube plugin</a> over the weekend, I decided to give this one another try before deleting the repository. And I’m glad I did.</p>
-<p>The new version 4.0 now uses OpenStreetMap instead of Google Maps and renders fully responsive, privacy-friendly maps. It supports custom zoom levels, markers (with text), and includes light and dark mode themes that adapt beautifully to the system preferences of the website visitors.</p>
-<p><strong>Under the hood, quite a bit has changed:</strong></p>
+<p>The <a href="https://fischr.org/2025/06/09/little-helpers-for-your-microblog/">initial version of the plugin</a> did its job for the few cases I needed, but whenever I wanted to quickly add a new map to a post, it became a pain. Finding the right latitude and longitude, or describing a place, often failed miserably. Too often, the result of the rendered map in my blog post was a lonely pin floating somewhere in the middle of the ocean, with nothing but blue around it. And the worst thing was, I didn&rsquo;t even know why.</p>
+<p>At some point, I was so frustrated that I removed all the embedded maps and even considered deleting <a href="https://github.com/flschr/mbplugin-maps">the repository</a> entirely. <del>Unfortunately</del> Luckily I was busy with other things and forgot about the pain the plugin caused. But while <a href="https://fischr.org/2025/10/20/adding-playlist-support-to-youtube/">working on the YouTube plugin</a> over the weekend, I decided to give this one another try before deleting the repository. And I’m glad I did.</p>
+<p>The new version 4.0 now uses OpenStreetMap instead of Google Maps and renders fully responsive, privacy-friendly maps. It supports custom zoom levels, markers (with text), and includes light and dark mode themes that adapt beautifully to the system preferences of your website visitors.</p>
+<p>Under the hood, quite a bit has changed:</p>
 <ul>
 <li>The plugin now integrates <a href="https://nominatim.org/">Nominatim</a> and <a href="https://www.geoapify.com/">Geoapify</a> for location lookup and tile rendering. Nominatim handles geocoding, turning place names into coordinates, while Geoapify provides clean, reliable map tiles without any tracking.</li>
 <li>The rendering of the interactive map is powered by <a href="https://leafletjs.com/">Leaflet.js</a>, which only loads when a visitor interacts with the preview image.</li>
-<li>Each map starts as a static preview image, keeping pages fast until interaction.</li>
-<li>All map data (center, zoom, markers, text) is stored directly inside the short code, making embeds self-contained and migration-proof.</li>
 </ul>
-<aside>
-  <p>If you used the old version of the plugin, you don’t need to update your posts or short codes. To get working map previews again, simply register for a free Geoapify API key and save it in the plugin settings.</p>
-</aside>
+<p>Like before, each map starts as a static preview image, keeping pages fast until interaction. And all map data (location, zoom, markers, text) is stored directly inside the short code, making embeds self-contained and migration-proof.</p>
+<p>Speaking about migration: If you used the old version of the plugin, you don’t need to update your posts or short codes. To get working map previews again, simply register for a free Geoapify API key and save it in the plugin settings.</p>
 <p>To make building and testing short codes easier, there is now a <a href="https://flschr.github.io/mbplugin-maps/">live validator</a>, a small web app that helps you generate and verify map embeds interactively before publishing them.</p>
-<p>The new codebase drops all other dependencies. No Google APIs, no tracking, no analytics anymore. The rewritten rendering logic makes maps faster, cleaner, and easier to embed. It finally feels like the simple, reliable map plugin I wanted from the beginning.</p>
+<p>And before you ask, here is how an embedded map looks and behaves. The following map shows the Munich Oktoberfest, which is, for whatever reason, a place in OSM. The location is actually called Theresienwiese.</p>
+
+
+
+
+
+
+
+
+
+
+
+<style>
+.mb-map-wrapper {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  background-color: #eef2f4;
+  max-width: 100%;
+  border-radius: 8px;
+}
+.mb-map-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1b1b1b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+}
+.mb-map-canvas--preview {
+  flex-direction: column;
+  gap: 1rem;
+  cursor: pointer;
+}
+.mb-map-canvas--preview * {
+  cursor: inherit;
+}
+.mb-map-canvas--fallback {
+  background: repeating-linear-gradient(
+      45deg,
+      rgba(27, 27, 27, 0.08) 0,
+      rgba(27, 27, 27, 0.08) 12px,
+      rgba(27, 27, 27, 0.14) 12px,
+      rgba(27, 27, 27, 0.14) 24px
+    )
+    #eef2f4;
+}
+.mb-map-preview-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.mb-map-preview-fallback-text {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+}
+.mb-map-preview-controls {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-top: clamp(3.5rem, 24vh, 11rem);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+.mb-map-canvas--fallback .mb-map-preview-controls {
+  color: #1f2937;
+  text-shadow: none;
+}
+.mb-map-canvas--fallback .mb-map-preview-controls p {
+  color: inherit;
+}
+.mb-map-preview-caption {
+  margin: 0;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+}
+.mb-map-wrapper .leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+.mb-map-loading-text {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  background: rgba(27, 27, 27, 0.85);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.mb-map-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  text-align: center;
+  font-size: 0.85em;
+  padding: 0.5em 1em;
+  z-index: 5;
+  pointer-events: none;
+}
+.mb-map-error {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+</style>
+
+<div class="mb-map-wrapper" data-mb-map="true" data-map-id="mb-map-1761128156092871608" data-loc="oktoberfest, münchen" data-zoom="15" data-marker="" data-preview-style="" data-preview-style-light="osm-bright" data-preview-style-dark="dark-matter-yellow-roads" data-preview-key="e6ecd38790224e6c8a700fb4a184d09a">
+  <div id="mb-map-1761128156092871608" class="mb-map-canvas">Loading map…</div>
+  
+    
+    <div class="mb-map-overlay">
+      
+        Klick lädt interaktive OpenStreetMap Karte.
+      
+    </div>
+  
+</div>
+<noscript>
+  <p class="mb-map-error">Maps require JavaScript to display.</p>
+</noscript>
+<script>
+(function() {
+  if (!window.__mbMapEnsureLeaflet) {
+    window.__mbMapPending = [];
+    window.__mbMapEnsureLeaflet = function(callback) {
+      if (window.__mbMapLeafletFailed) {
+        callback();
+        return;
+      }
+      if (window.L && window.L.map) {
+        callback();
+        return;
+      }
+      window.__mbMapPending.push(callback);
+      if (window.__mbMapLeafletLoading) {
+        return;
+      }
+      window.__mbMapLeafletLoading = true;
+      if (!document.querySelector('link[data-mb-map-leaflet="css"]')) {
+        function loadLeafletStylesheet(href, integrity, onFailure) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          if (integrity) {
+            link.integrity = integrity;
+          }
+          link.crossOrigin = 'anonymous';
+          link.dataset.mbMapLeaflet = 'css';
+          link.onload = function() {
+            window.__mbMapLeafletStyleFailed = false;
+          };
+          link.onerror = function() {
+            link.remove();
+            if (typeof onFailure === 'function') {
+              onFailure();
+            } else {
+              window.__mbMapLeafletStyleFailed = true;
+            }
+          };
+          document.head.appendChild(link);
+        }
+
+        loadLeafletStylesheet(
+          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+          'sha512-sA+e2pMvU0N2sfx8bV+RaH59RUW2KIiMzH6I0X58F3RrgPf63eNbUsMUKc7kwh28ykV59C1yH3e1h52mS7P4hQ==',
+          function() {
+            loadLeafletStylesheet('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css');
+          }
+        );
+      }
+      if (!document.querySelector('script[data-mb-map-leaflet="js"]')) {
+        function loadLeafletScript(src, integrity, onFailure) {
+          const script = document.createElement('script');
+          script.src = src;
+          if (integrity) {
+            script.integrity = integrity;
+          }
+          script.crossOrigin = 'anonymous';
+          script.dataset.mbMapLeaflet = 'js';
+          script.onload = function() {
+            window.__mbMapLeafletLoading = false;
+            window.__mbMapLeafletFailed = false;
+            const callbacks = window.__mbMapPending.splice(0);
+            callbacks.forEach(function(fn) { fn(); });
+          };
+          script.onerror = function() {
+            script.remove();
+            if (typeof onFailure === 'function') {
+              onFailure();
+            } else {
+              window.__mbMapLeafletLoading = false;
+              window.__mbMapLeafletFailed = true;
+              const callbacks = window.__mbMapPending.splice(0);
+              callbacks.forEach(function(fn) { fn(); });
+            }
+          };
+          document.body.appendChild(script);
+        }
+
+        loadLeafletScript(
+          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+          'sha512-vJ0wZgfGQm6G3y9kA0RduCMJLZ/HdlIQK5vCk1vZ1tcHTTX3e8DqRLVQjaxAgAnszCQQXTsQJ4nxs1jGME4pKw==',
+          function() {
+            loadLeafletScript('https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js');
+          }
+        );
+      }
+    };
+  }
+
+  if (!window.__mbMapInitMaps) {
+    var GEO_CACHE_PREFIX = 'mbMapGeocode:';
+    var GEO_CACHE_MAX_AGE = 14 * 24 * 60 * 60 * 1000; 
+
+    function detectPreferredColorScheme() {
+      var root = document.documentElement || null;
+      var body = document.body || null;
+
+      function inspectElement(element) {
+        if (!element) {
+          return '';
+        }
+
+        var dataset = element.dataset || {};
+        var candidates = [
+          dataset.mbColorScheme,
+          dataset.colorScheme,
+          dataset.scheme,
+          dataset.theme,
+          element.getAttribute ? element.getAttribute('data-color-scheme') : null,
+          element.getAttribute ? element.getAttribute('data-scheme') : null,
+          element.getAttribute ? element.getAttribute('data-theme') : null,
+          typeof element.className === 'string' ? element.className : null
+        ];
+
+        for (var i = 0; i < candidates.length; i += 1) {
+          var value = candidates[i];
+          if (!value || typeof value !== 'string') {
+            continue;
+          }
+          var lower = value.toLowerCase();
+          if (lower.indexOf('dark') !== -1) {
+            return 'dark';
+          }
+          if (lower.indexOf('light') !== -1) {
+            return 'light';
+          }
+        }
+
+        if (element.classList) {
+          if (element.classList.contains('dark')) {
+            return 'dark';
+          }
+          if (element.classList.contains('light')) {
+            return 'light';
+          }
+        }
+
+        return '';
+      }
+
+      var fromRoot = inspectElement(root);
+      if (fromRoot) {
+        return fromRoot;
+      }
+
+      var fromBody = inspectElement(body);
+      if (fromBody) {
+        return fromBody;
+      }
+
+      if (window.matchMedia) {
+        try {
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+          }
+          if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return 'light';
+          }
+        } catch (mediaError) {
+          
+        }
+      }
+
+      return 'unknown';
+    }
+
+    function resolvePreviewStyle(wrapper) {
+      if (!wrapper || !wrapper.dataset) {
+        return '';
+      }
+
+      var defaultStyle = (wrapper.dataset.previewStyle || '').trim();
+      var lightStyle = (wrapper.dataset.previewStyleLight || '').trim();
+      var darkStyle = (wrapper.dataset.previewStyleDark || '').trim();
+      var scheme = detectPreferredColorScheme();
+
+      if (scheme === 'dark') {
+        return darkStyle || defaultStyle || lightStyle || '';
+      }
+
+      if (scheme === 'light') {
+        return lightStyle || defaultStyle || darkStyle || '';
+      }
+
+      return defaultStyle || lightStyle || darkStyle || '';
+    }
+
+    function clearStaticPreviewFallback(canvas) {
+      if (!canvas) {
+        return;
+      }
+      canvas.classList.remove('mb-map-canvas--fallback');
+      var fallbackText = canvas.querySelector('.mb-map-preview-fallback-text');
+      if (fallbackText) {
+        fallbackText.remove();
+      }
+    }
+
+    function notifyColorSchemeChange() {
+      var wrappers = document.querySelectorAll('.mb-map-wrapper');
+      wrappers.forEach(function(wrapper) {
+        if (!wrapper || wrapper.dataset.mapLoaded === 'true') {
+          return;
+        }
+        if (typeof wrapper.__mbMapUpdatePreview === 'function') {
+          try {
+            wrapper.__mbMapUpdatePreview();
+          } catch (updateError) {
+            
+          }
+        }
+      });
+    }
+
+    function ensureColorSchemeListeners() {
+      if (window.__mbMapColorSchemeListenersInitialized) {
+        return;
+      }
+      window.__mbMapColorSchemeListenersInitialized = true;
+
+      function handleSchemeChange() {
+        notifyColorSchemeChange();
+      }
+
+      if (window.matchMedia) {
+        try {
+          var mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
+          if (mediaDark) {
+            if (typeof mediaDark.addEventListener === 'function') {
+              mediaDark.addEventListener('change', handleSchemeChange);
+            } else if (typeof mediaDark.addListener === 'function') {
+              mediaDark.addListener(handleSchemeChange);
+            }
+          }
+
+          var mediaLight = window.matchMedia('(prefers-color-scheme: light)');
+          if (mediaLight) {
+            if (typeof mediaLight.addEventListener === 'function') {
+              mediaLight.addEventListener('change', handleSchemeChange);
+            } else if (typeof mediaLight.addListener === 'function') {
+              mediaLight.addListener(handleSchemeChange);
+            }
+          }
+        } catch (listenerError) {
+          
+        }
+      }
+
+      if (window.MutationObserver && document.documentElement) {
+        try {
+          var observer = new MutationObserver(handleSchemeChange);
+          observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'data-scheme']
+          });
+          window.__mbMapColorSchemeMutationObserver = observer;
+        } catch (observerError) {
+          
+        }
+      }
+
+      if (window.MutationObserver && document.body) {
+        try {
+          var bodyObserver = new MutationObserver(handleSchemeChange);
+          bodyObserver.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'data-scheme']
+          });
+          window.__mbMapColorSchemeBodyObserver = bodyObserver;
+        } catch (bodyObserverError) {
+          
+        }
+      }
+
+      var schemeEvents = ['mb-color-scheme-change', 'themechange', 'color-scheme-change'];
+      schemeEvents.forEach(function(eventName) {
+        try {
+          document.addEventListener(eventName, handleSchemeChange);
+        } catch (docListenerError) {
+          
+        }
+        try {
+          window.addEventListener(eventName, handleSchemeChange);
+        } catch (winListenerError) {
+          
+        }
+      });
+    }
+
+    function supportsSessionStorage() {
+      if (typeof supportsSessionStorage.cached === 'boolean') {
+        return supportsSessionStorage.cached;
+      }
+      try {
+        var testKey = '__mbMapTest__';
+        window.sessionStorage.setItem(testKey, '1');
+        window.sessionStorage.removeItem(testKey);
+        supportsSessionStorage.cached = true;
+      } catch (error) {
+        supportsSessionStorage.cached = false;
+      }
+      return supportsSessionStorage.cached;
+    }
+
+    function getCachedCoordinates(query) {
+      if (!query || !supportsSessionStorage()) {
+        return null;
+      }
+      var cacheKey = GEO_CACHE_PREFIX + query;
+      try {
+        var raw = window.sessionStorage.getItem(cacheKey);
+        if (!raw) {
+          return null;
+        }
+        var parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') {
+          window.sessionStorage.removeItem(cacheKey);
+          return null;
+        }
+        if (typeof parsed.timestamp !== 'number' || (Date.now() - parsed.timestamp) > GEO_CACHE_MAX_AGE) {
+          window.sessionStorage.removeItem(cacheKey);
+          return null;
+        }
+        if (!isFinite(parsed.lat) || !isFinite(parsed.lng)) {
+          window.sessionStorage.removeItem(cacheKey);
+          return null;
+        }
+        return { lat: parsed.lat, lng: parsed.lng };
+      } catch (error) {
+        try {
+          window.sessionStorage.removeItem(cacheKey);
+        } catch (cleanupError) {
+          
+        }
+        return null;
+      }
+    }
+
+    function setCachedCoordinates(query, coords) {
+      if (!query || !supportsSessionStorage()) {
+        return;
+      }
+      if (!coords || !isFinite(coords.lat) || !isFinite(coords.lng)) {
+        return;
+      }
+      var cacheKey = GEO_CACHE_PREFIX + query;
+      try {
+        window.sessionStorage.setItem(cacheKey, JSON.stringify({
+          lat: coords.lat,
+          lng: coords.lng,
+          timestamp: Date.now()
+        }));
+      } catch (error) {
+        try {
+          window.sessionStorage.removeItem(cacheKey);
+        } catch (cleanupError) {
+          
+        }
+      }
+    }
+
+    function parseCoordinates(value) {
+      if (!value) {
+        return null;
+      }
+      const parts = value.split(',').map(function(part) {
+        return part.trim();
+      });
+      if (parts.length !== 2) {
+        return null;
+      }
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!isFinite(lat) || !isFinite(lng)) {
+        return null;
+      }
+      return { lat: lat, lng: lng };
+    }
+
+    function createMap(wrapper, lat, lng, zoom, markerText) {
+      const mapId = wrapper.dataset.mapId;
+      const canvas = document.getElementById(mapId);
+      if (!canvas) {
+        return;
+      }
+      canvas.classList.remove('mb-map-canvas--preview');
+      canvas.classList.remove('mb-map-canvas--fallback');
+      canvas.classList.remove('mb-map-canvas--loading');
+      canvas.style.backgroundImage = '';
+      canvas.innerHTML = '';
+      const map = L.map(mapId, {
+        attributionControl: true,
+        zoomControl: true,
+      }).setView([lat, lng], zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      const marker = L.marker([lat, lng]).addTo(map);
+      const cleanedMarkerText = typeof markerText === 'string' ? markerText.trim() : '';
+      if (cleanedMarkerText) {
+        marker.bindPopup(cleanedMarkerText).openPopup();
+      }
+      setTimeout(function() {
+        map.invalidateSize();
+        map.setView([lat, lng], zoom);
+      }, 0);
+    }
+
+    function clampZoom(zoom) {
+      return Math.max(0, Math.min(zoom, 19));
+    }
+
+    function buildGeoapifyStaticMapUrl(style, apiKey, lat, lng, zoom) {
+      const clampedZoom = clampZoom(zoom);
+      const formattedLat = lat.toFixed(6);
+      const formattedLng = lng.toFixed(6);
+      const width = 600;
+      const height = 338;
+      const normalizedStyle = (style || '').toString().trim();
+      const normalizedKey = (apiKey || '').toString().trim();
+
+      if (!normalizedKey) {
+        return null;
+      }
+
+      const styleName = normalizedStyle || 'osm-carto';
+      const markerColor = '%23dd2e44';
+      return 'https://maps.geoapify.com/v1/staticmap?style=' + encodeURIComponent(styleName) +
+        '&width=' + width + '&height=' + height +
+        '&center=lonlat:' + encodeURIComponent(formattedLng + ',' + formattedLat) +
+        '&zoom=' + clampedZoom +
+        '&marker=lonlat:' + encodeURIComponent(formattedLng + ',' + formattedLat) +
+        ';type:awesome;color:' + markerColor + ';size:medium&apiKey=' + encodeURIComponent(normalizedKey);
+    }
+
+    function buildStaticMapUrl(wrapper, lat, lng, zoom) {
+      if (!wrapper || !wrapper.dataset) {
+        return null;
+      }
+      const apiKey = (wrapper.dataset.previewKey || '').trim();
+      const style = resolvePreviewStyle(wrapper);
+      if (style) {
+        wrapper.dataset.activePreviewStyle = style;
+      } else {
+        delete wrapper.dataset.activePreviewStyle;
+      }
+      return buildGeoapifyStaticMapUrl(style, apiKey, lat, lng, zoom);
+    }
+
+    function showStaticPreviewUnavailable(canvas, message) {
+      canvas.classList.add('mb-map-canvas--fallback');
+      const existingMessage = canvas.querySelector('.mb-map-preview-fallback-text');
+      if (!existingMessage) {
+        const info = document.createElement('p');
+        info.className = 'mb-map-preview-fallback-text';
+        info.textContent = message || 'Static map preview is currently unavailable.';
+        canvas.insertBefore(info, canvas.firstChild || null);
+      }
+    }
+
+    function showPreview(wrapper, lat, lng, zoom, markerText, locationLabel) {
+      const mapId = wrapper.dataset.mapId;
+      const canvas = document.getElementById(mapId);
+      if (!canvas) {
+        return;
+      }
+      canvas.innerHTML = '';
+      canvas.classList.add('mb-map-canvas--preview');
+      canvas.classList.remove('mb-map-canvas--fallback');
+
+      const descriptiveLabel = locationLabel && locationLabel.trim() ? locationLabel.trim() : 'map location';
+      const trimmedMarkerText = typeof markerText === 'string' ? markerText.trim() : '';
+      const previewKey = (wrapper.dataset.previewKey || '').trim();
+      if (!previewKey) {
+        showStaticPreviewUnavailable(canvas, 'Static map preview requires a Geoapify API key.');
+        return;
+      }
+
+      const img = document.createElement('img');
+      img.className = 'mb-map-preview-image';
+      img.decoding = 'async';
+      img.loading = 'lazy';
+      img.referrerPolicy = 'no-referrer';
+      img.alt = 'Static map preview for ' + descriptiveLabel + '.';
+
+      function handlePreviewError() {
+        img.remove();
+        showStaticPreviewUnavailable(canvas);
+      }
+
+      img.addEventListener('error', handlePreviewError);
+
+      const controls = document.createElement('div');
+      controls.className = 'mb-map-preview-controls';
+
+      if (trimmedMarkerText) {
+        const caption = document.createElement('p');
+        caption.className = 'mb-map-preview-caption';
+        caption.textContent = trimmedMarkerText;
+        controls.appendChild(caption);
+      }
+
+      function updatePreviewImage() {
+        const staticMapUrl = buildStaticMapUrl(wrapper, lat, lng, zoom);
+        if (!staticMapUrl) {
+          if (img.parentNode) {
+            img.remove();
+          }
+          showStaticPreviewUnavailable(canvas);
+          return false;
+        }
+        clearStaticPreviewFallback(canvas);
+        if (img.parentNode !== canvas) {
+          canvas.insertBefore(img, canvas.firstChild || null);
+        }
+        if (img.dataset.mbMapUrl !== staticMapUrl) {
+          img.dataset.mbMapUrl = staticMapUrl;
+          img.src = staticMapUrl;
+        }
+        img.dataset.mbMapStyle = wrapper.dataset.activePreviewStyle || '';
+        return true;
+      }
+
+      wrapper.__mbMapUpdatePreview = updatePreviewImage;
+      const previewAvailable = updatePreviewImage();
+      if (!previewAvailable) {
+        delete wrapper.__mbMapUpdatePreview;
+        return;
+      }
+
+      if (controls.childElementCount > 0) {
+        canvas.appendChild(controls);
+      }
+
+      const markerDescription = trimmedMarkerText ? '. Marker: ' + trimmedMarkerText : '';
+      const accessibleLabel = 'Load interactive map for ' + descriptiveLabel + markerDescription;
+      canvas.setAttribute('role', 'button');
+      canvas.setAttribute('tabindex', '0');
+      canvas.setAttribute('aria-label', accessibleLabel);
+
+      function cleanupPreviewInteractions() {
+        canvas.removeEventListener('click', handlePreviewClick);
+        canvas.removeEventListener('keydown', handlePreviewKeydown);
+        canvas.removeAttribute('role');
+        canvas.removeAttribute('tabindex');
+        canvas.removeAttribute('aria-label');
+        canvas.removeAttribute('aria-busy');
+        delete wrapper.dataset.activePreviewStyle;
+        delete wrapper.__mbMapUpdatePreview;
+      }
+
+      function handlePreviewClick(event) {
+        event.preventDefault();
+        if (wrapper.dataset.mapLoaded === 'true' || wrapper.dataset.mapLoading === 'true') {
+          return;
+        }
+        wrapper.dataset.mapLoading = 'true';
+        canvas.setAttribute('aria-busy', 'true');
+        if (!canvas.classList.contains('mb-map-canvas--preview')) {
+          canvas.textContent = '';
+        }
+        const loadingText = document.createElement('div');
+        loadingText.className = 'mb-map-loading-text';
+        loadingText.textContent = 'Loading map…';
+        canvas.appendChild(loadingText);
+
+        window.__mbMapEnsureLeaflet(function() {
+          canvas.removeAttribute('aria-busy');
+          delete wrapper.dataset.mapLoading;
+          if (!window.L || !window.L.map) {
+            if (loadingText.parentNode) {
+              loadingText.remove();
+            }
+            showError(wrapper, 'Leaflet could not be loaded.');
+            return;
+          }
+          cleanupPreviewInteractions();
+          createMap(wrapper, lat, lng, zoom, markerText);
+          wrapper.dataset.mapLoaded = 'true';
+        });
+      }
+
+      function handlePreviewKeydown(event) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          handlePreviewClick(event);
+        }
+      }
+
+      canvas.addEventListener('click', handlePreviewClick);
+      canvas.addEventListener('keydown', handlePreviewKeydown);
+
+      ensureColorSchemeListeners();
+    }
+
+    function showError(wrapper, message) {
+      const mapId = wrapper.dataset.mapId;
+      const canvas = document.getElementById(mapId);
+      if (canvas) {
+        canvas.classList.remove('mb-map-canvas--preview');
+        canvas.classList.remove('mb-map-canvas--fallback');
+        canvas.classList.remove('mb-map-canvas--loading');
+        canvas.style.backgroundImage = '';
+        canvas.removeAttribute('role');
+        canvas.removeAttribute('tabindex');
+        canvas.removeAttribute('aria-label');
+        canvas.removeAttribute('aria-busy');
+        canvas.textContent = message;
+      }
+    }
+
+    window.__mbMapInitMaps = function() {
+      const wrappers = document.querySelectorAll('.mb-map-wrapper');
+      wrappers.forEach(function(wrapper) {
+        if (wrapper.dataset.initialized === 'true') {
+          return;
+        }
+
+        wrapper.dataset.initialized = 'true';
+        const zoomValue = parseInt(wrapper.dataset.zoom, 10);
+        const zoom = Number.isFinite(zoomValue) ? zoomValue : 14;
+        const locationValue = wrapper.dataset.loc;
+        const markerText = wrapper.dataset.marker ? wrapper.dataset.marker.trim() : '';
+        const normalizedLocation = locationValue ? locationValue.trim().toLowerCase() : '';
+        const coords = parseCoordinates(locationValue);
+
+        if (coords) {
+          showPreview(wrapper, coords.lat, coords.lng, zoom, markerText, locationValue);
+          return;
+        }
+
+        const mapId = wrapper.dataset.mapId;
+        const canvas = document.getElementById(mapId);
+        if (canvas) {
+          canvas.textContent = 'Searching for location…';
+        }
+
+        const cached = normalizedLocation ? getCachedCoordinates(normalizedLocation) : null;
+        if (cached) {
+          showPreview(wrapper, cached.lat, cached.lng, zoom, markerText, locationValue);
+          return;
+        }
+
+        const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(locationValue);
+        fetch(url, {
+          headers: {
+            'Accept-Language': (navigator.language || 'en')
+          }
+        })
+          .then(function(response) {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(function(results) {
+            if (!Array.isArray(results) || results.length === 0) {
+              showError(wrapper, 'Location not found.');
+              return;
+            }
+            const result = results[0];
+            const lat = parseFloat(result.lat);
+            const lng = parseFloat(result.lon);
+            if (!isFinite(lat) || !isFinite(lng)) {
+              showError(wrapper, 'Location not found.');
+              return;
+            }
+            if (normalizedLocation) {
+              setCachedCoordinates(normalizedLocation, { lat: lat, lng: lng });
+            }
+            showPreview(wrapper, lat, lng, zoom, markerText, locationValue);
+          })
+          .catch(function() {
+            showError(wrapper, 'Unable to load the map right now.');
+          });
+      });
+    };
+  }
+
+  window.__mbMapInitMaps();
+})();
+</script>
+
+
+<p>So, no Google APIs, no tracking, no analytics anymore. The rewritten rendering logic makes maps faster, cleaner, and easier to embed. It finally feels like the simple, reliable map plugin I wanted from the beginning.</p>
 <p>I hope you enjoy it as much as I do!</p>
 
 		</div>
@@ -64,7 +894,7 @@
 			 <p><img src="https://fischr.org/uploads/2025/new-release-youtube-plugin.webp" alt="Jetzt mit Playlist-Unterstützung: Neue Veröffentlichung von YouTube-Einbettungen für Micro.blog."></p>
 <p>Over the weekend, <a href="https://tylerknowsnothing.com/">Tyler</a> asked if I could add playlist support to my <a href="https://github.com/flschr/mbplugin-youtube-nocookie">Micro.blog YouTube Plugin</a>, which I <a href="https://fischr.org/2025/06/09/little-helpers-for-your-microblog/">originally built</a> because I didn’t like how native embeds clutter up the code and slow down the page, and most importantly, because I wanted something that respects privacy by default.</p>
 <p>As I was sick and not sleeping much anyway, I teamed up with the AI agent of my choice to dive back into the code and finally tick off a few things from my backlog. The new version now supports both regular YouTube links (simply grab the full URL and place it in the shortcode) and plain video IDs, as well as full playlists, all rendered via youtube-nocookie.com. The plugin automatically detects what you entered and magically does the rest for you.</p>
-<p>I also added support to add a custom thumbnail image, improved error handling and accessibility, and made the logic a bit more future-proof. Manton was kind enough to fix a small interference with the <a href="https://github.com/microdotblog/plugin-collections">Photo Collections</a> plugin at the same time. So, overall it is now way easier to handle and should work in most setups even more reliable. I hope you enjoy it!</p>
+<p>I also added support to add a custom thumbnail image, improved error handling and accessibility, and made the logic a bit more future-proof. Manton was kind enough to fix a small interference with the <a href="https://github.com/microdotblog/plugin-collections">Photo Collections</a> plugin at the same time. So, overall it is now way easier to handle and should work in most setups even more reliable. I hope you find it useful!</p>
 
 		</div>
 	  </div>
@@ -292,9 +1122,17 @@
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -358,25 +1196,36 @@
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -393,8 +1242,22 @@
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -402,17 +1265,16 @@
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -426,7 +1288,12 @@
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -788,9 +1655,17 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -854,25 +1729,36 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -889,8 +1775,22 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -898,17 +1798,16 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -922,7 +1821,12 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -1046,9 +1950,17 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -1112,25 +2024,36 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -1147,8 +2070,22 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -1156,17 +2093,16 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -1180,7 +2116,12 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -1388,9 +2329,17 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -1454,25 +2403,36 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -1489,8 +2449,22 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -1498,17 +2472,16 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -1522,7 +2495,12 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -1852,9 +2830,17 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -1918,25 +2904,36 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -1953,8 +2950,22 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -1962,17 +2973,16 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -1986,7 +2996,12 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -2628,9 +3643,17 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -2694,25 +3717,36 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -2729,8 +3763,22 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -2738,17 +3786,16 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -2762,7 +3809,12 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -2937,9 +3989,17 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -3003,25 +4063,36 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -3038,8 +4109,22 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -3047,17 +4132,16 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -3071,7 +4155,12 @@ Wir blˆiben dann einfa¤ch noch zwei T‰ge l‰nger ganz entspa¤nnt 😎🌴�
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -3436,9 +4525,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -3502,25 +4599,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -3537,8 +4645,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -3546,17 +4668,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -3570,7 +4691,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -3888,9 +5014,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -3954,25 +5088,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -3989,8 +5134,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -3998,17 +5157,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -4022,7 +5180,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -4185,9 +5348,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -4251,25 +5422,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -4286,8 +5468,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -4295,17 +5491,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -4319,7 +5514,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -4542,9 +5742,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -4608,25 +5816,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -4643,8 +5862,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -4652,17 +5885,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -4676,7 +5908,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -5455,9 +6692,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -5521,25 +6766,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -5556,8 +6812,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -5565,17 +6835,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -5589,7 +6858,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -5710,9 +6984,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -5776,25 +7058,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -5811,8 +7104,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -5820,17 +7127,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -5844,7 +7150,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -6384,9 +7695,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -6450,25 +7769,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -6485,8 +7815,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -6494,17 +7838,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -6518,7 +7861,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -6758,9 +8106,17 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -6824,25 +8180,36 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -6859,8 +8226,22 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -6868,17 +8249,16 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -6892,7 +8272,12 @@ Also KI als Werkzeug, als Denkverstärker, als Sidekick. Kein Overlord und kein 
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -7126,9 +8511,17 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -7192,25 +8585,36 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -7227,8 +8631,22 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -7236,17 +8654,16 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -7260,7 +8677,12 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -7379,9 +8801,17 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -7445,25 +8875,36 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -7480,8 +8921,22 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -7489,17 +8944,16 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -7513,7 +8967,12 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -7642,9 +9101,17 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -7708,25 +9175,36 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -7743,8 +9221,22 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -7752,17 +9244,16 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -7776,7 +9267,12 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -8005,9 +9501,17 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -8071,25 +9575,36 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -8106,8 +9621,22 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -8115,17 +9644,16 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -8139,7 +9667,12 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -8389,9 +9922,17 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -8455,25 +9996,36 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -8490,8 +10042,22 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -8499,17 +10065,16 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -8523,7 +10088,12 @@ Der Plot klingt vielversprechend und das Buch ist durchaus spannend bis zum Schl
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -9065,9 +10635,17 @@ Dazu gab es <a href="/2020/11/10/brotbackkunst/">frisch gebackenes Weißbrot</a
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -9131,25 +10709,36 @@ Dazu gab es <a href="/2020/11/10/brotbackkunst/">frisch gebackenes Weißbrot</a
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -9166,8 +10755,22 @@ Dazu gab es <a href="/2020/11/10/brotbackkunst/">frisch gebackenes Weißbrot</a
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -9175,17 +10778,16 @@ Dazu gab es <a href="/2020/11/10/brotbackkunst/">frisch gebackenes Weißbrot</a
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -9199,7 +10801,12 @@ Dazu gab es <a href="/2020/11/10/brotbackkunst/">frisch gebackenes Weißbrot</a
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -9517,9 +11124,17 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -9583,25 +11198,36 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -9618,8 +11244,22 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -9627,17 +11267,16 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -9651,7 +11290,12 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -9974,9 +11618,17 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -10040,25 +11692,36 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -10075,8 +11738,22 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -10084,17 +11761,16 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -10108,7 +11784,12 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -10295,8 +11976,8 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
 }
 </style>
 
-<div class="mb-map-wrapper" data-mb-map="true" data-map-id="mb-map-1761002274080041376" data-loc="45.7346389,10.7288418" data-zoom="12" data-marker="" data-preview-style="" data-preview-style-light="osm-bright" data-preview-style-dark="dark-matter-yellow-roads" data-preview-key="e6ecd38790224e6c8a700fb4a184d09a">
-  <div id="mb-map-1761002274080041376" class="mb-map-canvas">Loading map…</div>
+<div class="mb-map-wrapper" data-mb-map="true" data-map-id="mb-map-1761128156021917849" data-loc="45.7346389,10.7288418" data-zoom="12" data-marker="" data-preview-style="" data-preview-style-light="osm-bright" data-preview-style-dark="dark-matter-yellow-roads" data-preview-key="e6ecd38790224e6c8a700fb4a184d09a">
+  <div id="mb-map-1761128156021917849" class="mb-map-canvas">Loading map…</div>
   
     
     <div class="mb-map-overlay">
@@ -11006,8 +12687,8 @@ Dieses Album habe ich dieses Jahr unzählbar oft hoch und runter gehört. Für m
 
 
 
-<div class="mb-map-wrapper" data-mb-map="true" data-map-id="mb-map-1761002274080337670" data-loc="45.825646,10.734461" data-zoom="17" data-marker="" data-preview-style="" data-preview-style-light="osm-bright" data-preview-style-dark="dark-matter-yellow-roads" data-preview-key="e6ecd38790224e6c8a700fb4a184d09a">
-  <div id="mb-map-1761002274080337670" class="mb-map-canvas">Loading map…</div>
+<div class="mb-map-wrapper" data-mb-map="true" data-map-id="mb-map-1761128156022184752" data-loc="45.825646,10.734461" data-zoom="17" data-marker="" data-preview-style="" data-preview-style-light="osm-bright" data-preview-style-dark="dark-matter-yellow-roads" data-preview-key="e6ecd38790224e6c8a700fb4a184d09a">
+  <div id="mb-map-1761128156022184752" class="mb-map-canvas">Loading map…</div>
   
     
     <div class="mb-map-overlay">
@@ -12558,9 +14239,17 @@ Dazu gibt es bei uns meistens Apfelmus oder frische Beeren mit Vanillesauce.
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -12624,25 +14313,36 @@ Dazu gibt es bei uns meistens Apfelmus oder frische Beeren mit Vanillesauce.
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -12659,8 +14359,22 @@ Dazu gibt es bei uns meistens Apfelmus oder frische Beeren mit Vanillesauce.
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -12668,17 +14382,16 @@ Dazu gibt es bei uns meistens Apfelmus oder frische Beeren mit Vanillesauce.
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -12692,7 +14405,12 @@ Dazu gibt es bei uns meistens Apfelmus oder frische Beeren mit Vanillesauce.
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -13040,7 +14758,7 @@ Für die Einlage nach Belieben variieren:
 		<a href="https://fischr.org/2009/09/05/die-dreiste-lge-von-den/" class="u-url"><time class="dt-published" datetime="2009-09-05 22:12:07 &#43;0200">Sep 5, 2009</time></a>
 
 		<div class="e-content">
-			 
+			 <p>
 <style>
 .video-wrapper {
   position: relative;
@@ -13068,9 +14786,17 @@ Für die Einlage nach Belieben variieren:
 
 .video-thumbnail {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
+  object-position: center;
   background-color: #000;
   z-index: 1;
 }
@@ -13134,25 +14860,36 @@ Für die Einlage nach Belieben variieren:
   function parseId(raw) {
     if (!raw) return { type: 'unknown' };
     raw = raw.trim();
+    const idPattern = /^[a-zA-Z0-9_-]{11}$/;
     
     try {
       if (raw.startsWith('http')) {
         const u = new URL(raw);
+        const host = u.hostname.replace(/^www\./, '');
         const list = u.searchParams.get('list');
         const v = u.searchParams.get('v');
         if (list) return { type: 'playlist', id: list };
-        if (!v && u.hostname.includes('youtu.be')) {
-          const pathId = u.pathname.replace(/^\//,'');
-          if (/^[a-zA-Z0-9_-]{11}$/.test(pathId)) return { type: 'video', id: pathId };
+        if (v && idPattern.test(v)) return { type: 'video', id: v };
+
+        const segments = u.pathname.split('/').filter(Boolean);
+        const first = segments[0] || '';
+        const second = segments[1] || '';
+        if (host === 'youtu.be' && idPattern.test(first)) {
+          return { type: 'video', id: first };
         }
-        if (v && /^[a-zA-Z0-9_-]{11}$/.test(v)) return { type: 'video', id: v };
+        if (first === 'embed' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
+        if (first === 'shorts' && idPattern.test(second)) {
+          return { type: 'video', id: second };
+        }
       }
     } catch(e) {   }
 
     
     if (/^(PL|OL|UU|LL|FL)/i.test(raw)) return { type: 'playlist', id: raw };
     
-    if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return { type: 'video', id: raw };
+    if (idPattern.test(raw)) return { type: 'video', id: raw };
 
     
     const m = raw.match(/list=([^&]+)/);
@@ -13169,8 +14906,22 @@ Für die Einlage nach Belieben variieren:
       let raw = wrapper.dataset.videoId || '';
       if (raw.length > 2048) { console.warn('video id too long, treating as unknown'); raw=''; }
 
-      const customThumb = wrapper.dataset.thumb || '';
-      const safeThumb = /^https?:\/\//i.test(customThumb) ? customThumb : '';
+      let customThumb = wrapper.dataset.thumb || '';
+      customThumb = customThumb.trim();
+      if (customThumb) {
+        const markdownMatch = customThumb.match(/^\[[^\]]*\]\(([^)]+)\)$/);
+        if (markdownMatch) {
+          customThumb = markdownMatch[1].trim();
+        }
+      }
+      let safeThumb = '';
+      if (customThumb) {
+        try {
+          safeThumb = new URL(customThumb, document.baseURI).href;
+        } catch (e) {
+          safeThumb = '';
+        }
+      }
       const providedTitle = wrapper.dataset.videoTitle || '';
 
       const kind = parseId(raw);
@@ -13178,17 +14929,16 @@ Für die Einlage nach Belieben variieren:
       const thumbnail = wrapper.querySelector('.video-thumbnail');
 
       
-      if (kind.type === 'playlist') {
-        if (safeThumb) {
-          thumbnail.src = safeThumb;
-        } else {
-          const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
-                      `<rect width='100%' height='100%' fill='#000'/>`+
-                      `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
-                      `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
-                      `</svg>`;
-          thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        }
+      if (safeThumb) {
+        thumbnail.onerror = null;
+        thumbnail.src = safeThumb;
+      } else if (kind.type === 'playlist') {
+        const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'>`+
+                    `<rect width='100%' height='100%' fill='#000'/>`+
+                    `<rect x='220' y='260' width='840' height='60' fill='#fff'/>`+
+                    `<rect x='220' y='340' width='660' height='60' fill='#fff'/>`+
+                    `</svg>`;
+        thumbnail.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
       } else if (kind.type === 'video') {
         thumbnail.src = `https://img.youtube.com/vi/${kind.id}/maxresdefault.jpg`;
         thumbnail.onerror = () => { thumbnail.onerror = null; thumbnail.src = `https://img.youtube.com/vi/${kind.id}/0.jpg`; };
@@ -13202,7 +14952,12 @@ Für die Einlage nach Belieben variieren:
         } else if (kind.type === 'video') {
           src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(kind.id)}?autoplay=1&mute=1`;
         } else {
-          src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          if (/^https?:\/\//i.test(raw)) {
+            const joiner = raw.includes('?') ? '&' : '?';
+            src = `${raw}${joiner}autoplay=1&mute=1`;
+          } else {
+            src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(raw)}?autoplay=1&mute=1`;
+          }
         }
         const iframe = document.createElement('iframe');
         iframe.setAttribute('allowfullscreen','');
@@ -13242,7 +14997,7 @@ Für die Einlage nach Belieben variieren:
   tabindex="0"
   aria-label="Play YouTube video"
   data-video-id="3jrxuctMYLY"
-  data-thumb="[fischr.org/uploads/2...](https://fischr.org/uploads/2025/bob-der-hase.webp)"
+  data-thumb="https://fischr.org/uploads/2025/bob-der-hase.webp"
   >
   <img
     class="video-thumbnail"
@@ -13254,10 +15009,11 @@ Für die Einlage nach Belieben variieren:
   <div class="video-play-button"></div>
 </div>
 
-<p>Seit einigen Wochen <a href="https://www.youtube.com/watch?v=3jrxuctMYLY">belügt der debile Hase Bob</a> im Auftrag der Firma Tetra Pak in <a href="https://netzpolitik.org/2009/rwe-die-wahrheit-zum-spot/">bester RWE-Manier</a> die Fernsehzuschauer. Nur der Aufschrei bleibt bislang aus.</p>
+<br/>
+Seit einigen Wochen <a href="https://www.youtube.com/watch?v=3jrxuctMYLY">belügt der debile Hase Bob</a> im Auftrag der Firma Tetra Pak in <a href="https://netzpolitik.org/2009/rwe-die-wahrheit-zum-spot/">bester RWE-Manier</a> die Fernsehzuschauer. Nur der Aufschrei bleibt bislang aus.</p>
 <p>Und dabei ist der vom Spot vermittelte verschwenderische Umgang mit dem Grundnahrungsmittel Brot noch der kleinste Aufreger. Nein, es ist viel mehr der Umstand, wie Tetra Pak seine Verbundverpackungen kindgerecht als ökologisch preist. Eine Verpackung, die man ruhig als eine der umweltschädlichsten der Welt bezeichnen kann.</p>
 <p>Leider verschweigt der Spot, dass Tetra Pak eben nicht nur aus Holz beziehungsweise Papier bestehen, auch wenn auf diesen Rohstoff sicherlich der überwiegende Anteil entfällt. Neben Kunststoff findet sich einem Tetra Pak auch Aluminium wieder, genauer gesagt Polyethylen-Aluminiumzellstoff. Nicht wirklich nachwachsende Rohstoffe, oder?</p>
-<p>Das Problem daran ist nämlich, dass sich diese in Schichten miteinander verbundenen Materialien so gut wie gar nicht mehr voneinander trennen lassen. Erst seit dem Jahr 2008 existiert mit der sogenannten Plasmatrenntechnik überhaupt eine Möglichkeit, Tetra Paks zu immerhin 99% zu recyceln. Nur bedauerlicherweise benötigt man für das Recycling eines Tetra Paks zehnmal mehr Energie wie für die Herstellung eines solchen Getränkekartons. Auch nicht unerwähnt sollte bleiben, dass das Ergebnis dieses Recyclings eher minderwertiger Natur ist, weshalb der Großteil dieser Verbundverpackungen nach wie vor in der Müllverbrennung landen.</p>
+<p>Das Problem daran ist nämlich, dass sich diese in Schichten miteinander verbundenen Materialien so gut wie gar nicht mehr voneinander trennen lassen. Erst seit dem Jahr 2008 existiert mit der sogenannten Plasmatrenntechnik überhaupt eine Möglichkeit, Tetra Paks zu immerhin 99 % zu recyceln. Nur bedauerlicherweise benötigt man für das Recycling eines Tetra Paks zehnmal mehr Energie wie für die Herstellung eines solchen Getränkekartons. Auch nicht unerwähnt sollte bleiben, dass das Ergebnis dieses Recyclings eher minderwertiger Natur ist, weshalb der Großteil dieser Verbundverpackungen nach wie vor in der Müllverbrennung landen.</p>
 
 		</div>
 	  </div>
